@@ -23,6 +23,13 @@ function ready_all(){
 		        	selected.id          = item.code;
 		        }
 		    });
+			$('#edit_designation').typeahead({
+		        source: designations,
+		        afterSelect: function(item){
+		        	selected.designation = item.name;
+		        	selected.id          = item.code;
+		        }
+		    });
 		}
 	});
 
@@ -63,15 +70,98 @@ function ready_all(){
     		}
     	})
     });
+	$("#designation-list").ready(function() {
+		$.ajax({
+			url: "php/config.php",
+			type: "POST",
+			data: {call_func: "load_designations"},
+			success: function(data){
+				$("#designation-list").html(data);
+			}
+		})
+	});
 
 }
 
+// Function to open the Edit Employee modal
+function openEditEmployeeModal(emp_id, prefix, fname, mname, lname, suffix, designation) {
+    $('#edit_emp_id').val(emp_id);
+	$('#edit_prefix').val(prefix);
+    $('#edit_fname').val(fname);
+	$('#edit_mname').val(mname);
+	$('#edit_lname').val(lname);
+	$('#edit_suffix').val(suffix);
+	$('#edit_designation').val(designation);
+    // Populate other fields as needed based on emp_id
+
+    $('#modal_edit_employee').modal('show');
+}
+
+function openEditDesignationModal(designation_id, designation) {
+	$('#edit_designation_id').val(designation_id);
+	$('#edit_new_designation').val(designation);
+
+	$('#modal_edit_designation').modal('show');
+}
 function capitalizeFirstLetter(element,str) {
 	element.value = (str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()).split('.').join("");
 }
 
 function capitalize(element,str) {
 	element.value = (str.toUpperCase()).split('.').join("");
+}
+
+function update_designation() {
+	if($("#edit_new_designation").val().trim() != "") {
+		$.ajax({
+			type: "POST",
+			url: "php/config.php",
+			data: {
+				call_func: "update_designation",
+				designation_id: $("#edit_designation_id").val().trim(),
+				designation: $("#edit_new_designation").val().trim()
+			},
+			success: function(data) {
+				$("#modal_edit_designation .close").click();
+				swal("Saved!", "Existing designation updated.", "success");
+			}
+		})
+	} else {
+		swal("Please fill in!", "Designation", "warning");
+	}
+}
+function update_employee() {
+	if($("#edit_fname").val().trim() != ""){
+		if($("#edit_lname").val().trim() != ""){
+			if($("#edit_designation").val().trim() != ""){
+				$.ajax({
+					type: "POST",
+					url: "php/config.php",
+					data: {
+						call_func: "update_employee",
+						emp_id: $("#edit_emp_id").val().trim(),
+						prefix: $("#edit_prefix").val().trim(),
+						fname: $("#edit_fname").val().trim(),
+						mname: $("#edit_mname").val().trim(),
+						lname: $("#edit_lname").val().trim(),
+						suffix: $("#edit_suffix").val().trim(),
+						designation: $("#edit_designation").val().trim()
+					},
+					success: function(data){
+						$("#modal_edit_employee .close").click();
+						swal("Saved!", "Existing employee updated.", "success");
+					}
+				})
+
+			}else{
+				swal("Please fill in!", "Designation", "warning");
+			}
+		}else{
+			swal("Please fill in!", "Lastname", "warning");
+		}
+	}else{
+		swal("Please fill in!", "Firstname", "warning");
+	}
 }
 
 function save_employee(){
@@ -110,6 +200,26 @@ function save_employee(){
 	
 }
 
+//saving new designation
+
+function save_designation() {
+	if($("#add_new_designation").val().trim() != "") {
+		$.ajax({
+			type: "POST",
+			url: "php/config.php",
+			data: {
+				call_func: "save_designation",
+				designation: $("#add_new_designation").val().trim()
+			},
+			success: function(data) {
+				$("#modal_add_designation .close").click();
+				swal("Saved!", "New designation added.", "success");
+			}
+		})
+	} else {
+		swal("Please fill in!", "Designation", "warning");
+	}
+}
 function get_data(){
 	$.ajax({
 		type: "POST",

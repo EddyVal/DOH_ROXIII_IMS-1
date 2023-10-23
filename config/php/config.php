@@ -7,21 +7,55 @@ session_start();
 function load_employee(){
 	global $connhr;
 
-	$sql = mysqli_query($connhr, "SELECT emp_id, fname, mname, lname, prefix, suffix FROM tbl_employee WHERE status LIKE 'Active' AND (job_status LIKE 'Regular' OR job_status LIKE '') ORDER BY fname ASC");
+	$sql = mysqli_query($connhr, "SELECT emp_id, fname, mname, lname, prefix, suffix, designation_fid FROM tbl_employee WHERE status LIKE 'Active' AND (job_status LIKE 'Regular' OR job_status LIKE '') ORDER BY fname ASC");
 	if(mysqli_num_rows($sql) != 0){
 		while($row = mysqli_fetch_assoc($sql)){
+			$logo = $_SESSION['company_logo'];
+			$emp_id = $row['emp_id'];
 			$name = (($row["prefix"] != null) ? $row["prefix"]." " : "")."".$row["fname"]." ".$row["mname"][0].". ".$row["lname"]."".(($row["suffix"] != null) ? ", ".$row["suffix"] : "");
-			echo "<div class=\"chat-user\">
-                        <span class=\"float-right label label-primary\">Active</span>
-                        <img class=\"chat-avatar\" src=\"../../archives/img/".$_SESSION['company_logo']."\">
-                        <div class=\"chat-user-name\">
-                            <p>".$name."</p>
-                        </div>
-                    </div>";
+			$fname = $row['fname'];
+			$mname = $row['mname'];
+			$lname = $row['lname'];
+			$prefix = $row['prefix'];
+			$suffix = $row['suffix'];
+			$designation_id = $row['designation_fid'];
+			$designation_query = mysqli_query($connhr, "SELECT designation FROM ref_designation WHERE designation_id = $designation_id");
+			$designation_row = mysqli_fetch_assoc($designation_query);
+			$designation = $designation_row['designation'];
+			echo '<div class="chat-user">
+					<button type="button" class="btn btn-success btn-sm" data-role="edit" onclick="openEditEmployeeModal('.$emp_id.', \''.$prefix.'\', \''.$fname.'\', \''.$mname.'\', \''.$lname.'\', \''.$suffix.'\', \''.$designation.'\')"> Edit</button>
+					<span class="float-right label label-primary">Active</span>
+					<img class="chat-avatar" src="../../archives/img/"'.$logo.'">
+					<div class="chat-user-name">
+						<p>'.$name.'</p>
+					</div>
+				</div>
+			';
 		}
 	}
 }
 
+// For designation listing
+function load_designations() {
+	global $connhr;
+
+	$sql = mysqli_query($connhr, "SELECT designation_id, designation FROM ref_designation");
+	if(mysqli_num_rows($sql) != 0) {
+		while($row = mysqli_fetch_assoc($sql)) {
+			$designation_id = $row['designation_id'];
+			$designation = $row['designation'];
+
+			echo '
+				<div class="chat-user">
+					<div class="chat-user-name">
+						<p>'.$designation.'</p>
+						<button type=button" class="btn btn-success btn-sm" data-role="edit" onclick="openEditDesignationModal('.$designation_id.', \''.$designation.'\')">Edit</button>
+					</div>
+				</div>
+			';
+		}
+	}
+}
 function load_designation(){
 	global $connhr;
 
@@ -32,6 +66,32 @@ function load_designation(){
 	}
 
 	echo json_encode($designations);
+}
+
+//update designation
+function update_designation() {
+	global $connhr;
+
+	$designation_id = mysqli_real_escape_string($connhr, $_POST['designation_id']);
+	$designation = mysqli_real_escape_string($connhr, $_POST['designation']);
+
+	mysqli_query($connhr, "UPDATE ref_designation SET designation = '$designation' WHERE designation_id = '$designation_id'");
+}
+function update_employee() {
+	global $connhr;
+	
+	$emp_id = mysqli_real_escape_string($connhr, $_POST["emp_id"]); // You need to get the employee's ID
+	$prefix = mysqli_real_escape_string($connhr, $_POST["prefix"]);
+	$fname = mysqli_real_escape_string($connhr, $_POST["fname"]);
+	$mname = mysqli_real_escape_string($connhr, $_POST["mname"]);
+	$lname = mysqli_real_escape_string($connhr, $_POST["lname"]);
+	$suffix = mysqli_real_escape_string($connhr, $_POST["suffix"]);
+	$designation = mysqli_real_escape_string($connhr, $_POST["designation"]);
+	$designation_query = mysqli_query($connhr, "SELECT designation_id FROM ref_designation WHERE designation = '$designation'");
+	$designation_row = mysqli_fetch_assoc($designation_query);
+	$designation_id = $designation_row['designation_id'];
+
+	mysqli_query($connhr, "UPDATE tbl_employee SET fname = '$fname', mname = '$mname', lname = '$lname', prefix = '$prefix', suffix = '$suffix', designation_fid = '$designation_id' WHERE emp_id = '$emp_id' ");
 }
 
 function save_employee(){
@@ -51,6 +111,15 @@ function save_employee(){
 	}
 
 	mysqli_query($connhr, "INSERT INTO tbl_employee(fname, mname, lname, prefix, suffix, designation_fid, status) VALUES('$fname', '$mname', '$lname', '$prefix', '$suffix', '$position_id', 'Active')");
+}
+
+// save new designation
+function save_designation() {
+	global $connhr;
+
+	$designation = mysqli_real_escape_string($connhr, $_POST["designation"]);
+
+	mysqli_query($connhr, "INSERT INTO ref_designation(designation) VALUES('$designation')");
 }
 
 function save_rep(){
@@ -134,6 +203,18 @@ switch($call_func){
 		break;
 	case "save_employee":
 		save_employee();
+		break;
+	case "update_employee":
+		update_employee();
+		break;
+	case "load_designations";
+		load_designations();
+		break;
+	case "save_designation":
+		save_designation();
+		break;
+	case "update_designation";
+		update_designation();
 		break;
 }
 

@@ -476,6 +476,7 @@ function print_ris(ris_no){
             $("#ris_body").html(data["tbody"]);
             $("#print_purp").html(data["purpose"]);
             $("#print_rb").html(data["requested_by"].toUpperCase());
+            $("#print_rbd").html(data["requested_by_designation"].toUpperCase());
             $("#print_ib").html(data["issued_by"].toUpperCase());
             $("#print_ibd").html(data["issued_by_designation"].toUpperCase());
             $("#print_ab").html(data["approved_by"].toUpperCase());

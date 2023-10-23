@@ -242,6 +242,19 @@
                             </div>
                         </div>
                     </div>
+                    <div class="ibox" style="border-style: solid; border-color: black; border-width: 1px;">
+                        <div class="ibox-title">
+                            <h5><i class="fa fa-list"></i> Designations List</h5>
+                            <button class="btn btn-xs btn-default pull-right" data-toggle="modal" data-target="#modal_add_designation"><i class="fa fa-plus"></i> Add Designation</button>
+                        </div>
+                        <div class="ibox-content">
+                            <div class="chat-users" style="margin: 0px;">
+                                <div class="designation-list" id="designation-list">
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <br><br>
@@ -254,6 +267,9 @@
     </div>
     <?php
         require "modals/add_employee.php";
+        require "modals/edit_employee.php";
+        require "modals/add_designation.php";
+        require "modals/edit_designation.php";
         require "../assets/small_chat.php";
         require "../assets/scripts_assets.php";
     ?>

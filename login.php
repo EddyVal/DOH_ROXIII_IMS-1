@@ -58,14 +58,17 @@ if(isset($_SESSION["username"])){
             <p class="font-size-20"></p>
             <div style="color: #fdec09;font-size: 18px;border-top: 1PX SOLID #BEBEBE;">
                 <br>
-                <b>NEW SYSTEM UPDATES:</b><br>
+                <b>NEW SYSTEM UPDATES (10/18/2023):</b><br>
                 <br>
                 <div class="row">
                     <div class="col-sm-12">
-                        - Can now add/delete items on existing RIS/PTR records.
+                        - Designation now appears instead of END USER when generating RIS.
                     </div>
                     <div class="col-sm-12">
-                        - ICS/PAR item-transfer feature enabled.
+                        - Edit Employee Details and change/update their designations.
+                    </div>
+                    <div class="col-sm-12">
+                        - Add and edit, new and existing designations.
                     </div>
                     <div class="col-sm-12">
                         - Minor bugs fixed.
