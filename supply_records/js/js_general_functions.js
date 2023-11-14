@@ -211,6 +211,12 @@ function get_item_trans(id, table, field_id, field){
     });
 }
 
+$("#trans_type").ready(function(){
+    if($("#trans_type").val() != "RIS") {
+        $("#ris_required").hide();
+    }
+});
+
 $("#trans_type").change(function(){
     var po_value = (new Date().toDateInputValue()).split("-");
     var arr_data = $("#trans_type").val() == "ICS" ? 
@@ -224,7 +230,7 @@ $("#trans_type").change(function(){
     } else {
         $("#ris_required").hide();
     }
-    
+
     $.ajax({
         type: "POST",
         url: "php/php_ics.php",
@@ -275,35 +281,82 @@ function trans_now(){
     if($("#trans_ics").val().match($po_regex)){
         if($("#trans_name").val() != null){
             if(get_checked_items() != 0){
-                $.ajax({
-                    type: "POST",
-                    url: temp_url,
-                    data: {call_func: "create_trans",
-                            id: $("#trans_item_id").html(),
-                            trans_ics: $("#trans_ics").val(),
-                            trans_name: $("#trans_name option:selected").text(),
-                            trans_id: $("#trans_name").val(),
-                            prop_no: prop_no,
-                            serial_no: serial_no,
-                            un_prop_no: un_prop_no,
-                            un_serial_no: un_serial_no,
-                            date_released: new Date().toDateInputValue(),
-                            type: arr_data[0],
-                            table: arr_data[1],
-                            table_id: arr_data[2],
-                            table_no: arr_data[3]
-                        },
-                    success: function(data){
-                        swal("Transferred successfully!", "", "success");
-                        $("#trans_ics").val("");
-                        $("#trans_name").val(null).change();
-                        $("#trans_type").val(null).change();
-                        $("#modal_transfer_item .close").click();
-                        $("#edit_ics_par .close").click();
-                        var query = $('#search_box').val();
-                        get_records(active_page, _url, query);
+                if($("#trans_type").val() != "RIS"){
+                    $.ajax({
+                        type: "POST",
+                        url: temp_url,
+                        data: {call_func: "create_trans",
+                                id: $("#trans_item_id").html(),
+                                trans_ics: $("#trans_ics").val(),
+                                trans_name: $("#trans_name option:selected").text(),
+                                trans_id: $("#trans_name").val(),
+                                prop_no: prop_no,
+                                serial_no: serial_no,
+                                un_prop_no: un_prop_no,
+                                un_serial_no: un_serial_no,
+                                date_released: new Date().toDateInputValue(),
+                                type: arr_data[0],
+                                table: arr_data[1],
+                                table_id: arr_data[2],
+                                table_no: arr_data[3]
+                            },
+                        success: function(data){
+                            swal("Transferred successfully!", "", "success");
+                            $("#trans_ics").val("");
+                            $("#trans_name").val(null).change();
+                            $("#trans_type").val(null).change();
+                            $("#modal_transfer_item .close").click();
+                            $("#edit_ics_par .close").click();
+                            var query = $('#search_box').val();
+                            get_records(active_page, _url, query);
+                        }
+                    });
+                }else{
+                    //run this ajax instead if transfer to RIS was selected
+                    if($("#issue_name").val() != null){
+                        if($("#approve_name").val() != null){
+                            $.ajax({
+                                type: "POST",
+                                url: temp_url,
+                                data: {call_func: "create_trans",
+                                        id: $("#trans_item_id").html(),
+                                        trans_ics: $("#trans_ics").val(),
+                                        trans_name: $("#trans_name option:selected").text(),
+                                        trans_id: $("#trans_name").val(),
+                                        issue_name: $("#issue_name option:selected").text(),
+                                        issue_id: $("#issue_name").val(),
+                                        approve_name: $("#approve_name option:selected").text(),
+                                        approve_id: $("#approve_name").val(),
+                                        prop_no: prop_no,
+                                        serial_no: serial_no,
+                                        un_prop_no: un_prop_no,
+                                        un_serial_no: un_serial_no,
+                                        date_released: new Date().toDateInputValue(),
+                                        type: arr_data[0],
+                                        table: arr_data[1],
+                                        table_id: arr_data[2],
+                                        table_no: arr_data[3]
+                                    },
+                                success: function(data){
+                                    swal("Transferred successfully!", "", "success");
+                                    $("#trans_ics").val("");
+                                    $("#trans_name").val(null).change();
+                                    $("#issue_name").val(null).change();
+                                    $("#approve_name").val(null).change();
+                                    $("#trans_type").val(null).change();
+                                    $("#modal_transfer_item .close").click();
+                                    $("#edit_ics_par .close").click();
+                                    var query = $('#search_box').val();
+                                    get_records(active_page, _url, query);
+                                }
+                            });
+                        }else{
+                            swal("Please fill in!", "Approved By Name.", "warning");
+                        }
+                    }else{
+                        swal("Please fill in!", "Issued By Name.", "warning");
                     }
-                });
+                }                
             }else{
                 swal("No checked items!", "Kindly check at least one item for ICS/PAR transfer.", "warning");
             }

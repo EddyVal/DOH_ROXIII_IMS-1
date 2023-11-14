@@ -62,7 +62,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="ris_required" class="row" hidden>
+                        <div id="ris_required" class="row">
                             <div class="col-lg-6">
                                 <div class="form-group row">
                                     <label class="col-lg-4 col-form-label">Issued By:</label>
@@ -73,7 +73,7 @@
                                     </div>
                                 </div>
                             </div>
-														<div class="col-lg-6">
+							<div class="col-lg-6">
                                 <div class="form-group row">
                                     <label class="col-lg-4 col-form-label">Approved By:</label>
                                     <div class="col-lg-12">

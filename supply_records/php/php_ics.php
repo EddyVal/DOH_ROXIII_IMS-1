@@ -619,9 +619,9 @@ switch($call_func){
 	case "get_latest_ics":
 		get_latest_ics();
 		break;
-	case "get_latest_pn":
-		get_latest_pn();
-		break;
+	// case "get_latest_pn":
+	// 	get_latest_pn();
+	// 	break;
 	case "to_issue":
 		to_issue();
 		break;

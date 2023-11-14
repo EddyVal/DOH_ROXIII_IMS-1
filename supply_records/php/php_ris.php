@@ -10,8 +10,12 @@ function create_trans(){
 
 	$id = mysqli_real_escape_string($conn, $_POST["id"]);
 	$trans_ics = mysqli_real_escape_string($conn, $_POST["trans_ics"]);
-	$received_by = mysqli_real_escape_string($conn, $_POST["trans_name"]);
+	$requested_by = mysqli_real_escape_string($conn, $_POST["trans_name"]);
 	$trans_id = mysqli_real_escape_string($conn, $_POST["trans_id"]);
+	$issued_by = mysqli_real_escape_string($conn, $_POST["issue_name"]);
+	$issued_by_id = mysqli_real_escape_string($conn, $_POST["issue_id"]);
+	$approved_by = mysqli_real_escape_string($conn, $_POST["approve_name"]);
+	$approved_by_id = mysqli_real_escape_string($conn, $_POST["approve_id"]);
 	$prop_no = implode(",",(array) $_POST["prop_no"]);
 	$serial_no = implode(",",(array) $_POST["serial_no"]);
 	$un_prop_no = implode(",",(array) $_POST["un_prop_no"]);
@@ -24,19 +28,23 @@ function create_trans(){
 	$table_no 	= mysqli_real_escape_string($conn, $_POST["table_no"]);
 
 	$quer1 = mysqli_query($connhr, "SELECT d.designation, e.designation_fid FROM tbl_employee AS e, ref_designation AS d WHERE d.designation_id = e.designation_fid AND e.emp_id = '$trans_id'");
-	$received_by_designation = mysqli_real_escape_string($conn, mysqli_fetch_assoc($quer1)["designation"]);
+	$requested_by_designation = mysqli_real_escape_string($conn, mysqli_fetch_assoc($quer1)["designation"]);
+	$quer2 = mysqli_query($connhr, "SELECT d.designation, e.designation_fid FROM tbl_employee AS e, ref_designation AS d WHERE d.designation_id = e.designation_fid AND e.emp_id = '$issued_by_id'");
+	$issued_by_designation = mysqli_real_escape_string($conn, mysqli_fetch_assoc($quer2)["designation"]);
+	$quer3 = mysqli_query($connhr, "SELECT d.designation, e.designation_fid FROM tbl_employee AS e, ref_designation AS d WHERE d.designation_id = e.designation_fid AND e.emp_id = '$approved_by_id'");
+	$approved_by_designation = mysqli_real_escape_string($conn, mysqli_fetch_assoc($quer3)["designation"]);
 	
 	$sql = mysqli_query($conn, "SELECT * FROM ".$table." WHERE ".$table_id." = '$id'");
 	if($row = mysqli_fetch_assoc($sql)){
 		$quantity_trans = count(explode(",", $prop_no));
 		$remarks = "This cancels previous ".$type." issued to ".$row["received_by"]." (".$row[$table_no].")";
-		mysqli_query($conn, "INSERT INTO tbl_ris(ris_no, entity_name, fund_cluster, reference_no, item, description, unit, supplier, serial_no, category, property_no, quantity, cost, total, remarks, received_from, received_from_designation, received_by, received_by_designation, date_released, area, po_id) VALUES ('$trans_ics', '".$row["entity_name"]."', '".$row["fund_cluster"]."', '".$row["reference_no"]."', '".$row["item"]."', '".$row["description"]."', '".$row["unit"]."', '".$row["supplier"]."', '$serial_no', '".$row["category"]."', '$prop_no', '$quantity_trans', '".$row["cost"]."', '0.00', '$remarks', '".$row["received_from"]."', '".$row["received_from_designation"]."', '$received_by', '$received_by_designation', '$date_released', '".$row["area"]."', '".$row["po_id"]."')");
+		mysqli_query($conn, "INSERT INTO tbl_ris(ris_no, entity_name, fund_cluster, reference_no, item, description, unit, supplier, lot_no, category, property_no, quantity, cost, total, remarks, requested_by, requested_by_designation, issued_by, issued_by_designation, approved_by, approved_by_designation, date, po_id) VALUES ('$trans_ics', '".$row["entity_name"]."', '".$row["fund_cluster"]."', '".$row["reference_no"]."', '".$row["item"]."', '".$row["description"]."', '".$row["unit"]."', '".$row["supplier"]."', '$serial_no', '".$row["category"]."', '$prop_no', '$quantity_trans', '".$row["cost"]."', '0.00', '$remarks', '$requested_by', '$requested_by_designation', '$issued_by', '$issued_by_designation', '$approved_by', '$approved_by_designation', '$date_released', '".$row["po_id"]."')");
 		
 		$quantity_new = (int)$row["quantity"] - $quantity_trans;
 		mysqli_query($conn, "UPDATE ".$table." SET property_no = '$un_prop_no', serial_no = '$un_serial_no', quantity = '$quantity_new' WHERE ".$table_id." = '$id'");
 
 		$emp_id = $_SESSION["emp_id"];
-		$description = $_SESSION["username"]." created an RIS transfer (".$trans_ics.") to ".$received_by." with a remarks - ".$remarks;
+		$description = $_SESSION["username"]." created an RIS transfer (".$trans_ics.") to ".$requested_by." with a remarks - ".$remarks;
 		mysqli_query($conn, "INSERT INTO tbl_logs(emp_id,description) VALUES('$emp_id','$description')");
 	}
 }
@@ -343,7 +351,7 @@ function print_ris(){
 	$rows_allocate = 0;
 	$ris_no = mysqli_real_escape_string($conn, $_POST["ris_no"]);$reference_no = "";
 	$entity_name = "";$fund_cluster = "";$division = "";$office = "";$rcc = "";$supplier = "";$all_total = 0.00;
-	$purpose = "";$requested_by = "";$requested_by_designation = "";$issued_by = "";$issued_by_designation;$date = "";$approved_by = "";$approved_by_designation = "";
+	$purpose = "";$requested_by = "";$requested_by_designation = "";$issued_by = "";$issued_by_designation="";$date = "";$approved_by = "";$approved_by_designation = "";
 	$tbody = "";
 	$sql = mysqli_query($conn, "SELECT entity_name,reference_no,supplier,fund_cluster,division,office,rcc,unit,item,description,quantity,unit_cost,total,available,quantity_stocks,remarks,purpose,requested_by,requested_by_designation,issued_by,issued_by_designation,approved_by,approved_by_designation,SUBSTRING(tbl_ris.date,1,10) AS dr FROM tbl_ris WHERE ris_no LIKE '$ris_no'");
 	while($row = mysqli_fetch_assoc($sql)){
