@@ -5,6 +5,42 @@ require "../../php/php_general_functions.php";
 
 session_start();
 
+function create_trans(){
+	global $conn; global $connhr;
+
+	$id = mysqli_real_escape_string($conn, $_POST["id"]);
+	$trans_ics = mysqli_real_escape_string($conn, $_POST["trans_ics"]);
+	$received_by = mysqli_real_escape_string($conn, $_POST["trans_name"]);
+	$trans_id = mysqli_real_escape_string($conn, $_POST["trans_id"]);
+	$prop_no = implode(",",(array) $_POST["prop_no"]);
+	$serial_no = implode(",",(array) $_POST["serial_no"]);
+	$un_prop_no = implode(",",(array) $_POST["un_prop_no"]);
+	$un_serial_no = implode(",",(array) $_POST["un_serial_no"]);
+	$date_released = mysqli_real_escape_string($conn, $_POST["date_released"]);
+
+	$type 		= mysqli_real_escape_string($conn, $_POST["type"]);
+	$table 		= mysqli_real_escape_string($conn, $_POST["table"]);
+	$table_id 	= mysqli_real_escape_string($conn, $_POST["table_id"]);
+	$table_no 	= mysqli_real_escape_string($conn, $_POST["table_no"]);
+
+	$quer1 = mysqli_query($connhr, "SELECT d.designation, e.designation_fid FROM tbl_employee AS e, ref_designation AS d WHERE d.designation_id = e.designation_fid AND e.emp_id = '$trans_id'");
+	$received_by_designation = mysqli_real_escape_string($conn, mysqli_fetch_assoc($quer1)["designation"]);
+	
+	$sql = mysqli_query($conn, "SELECT * FROM ".$table." WHERE ".$table_id." = '$id'");
+	if($row = mysqli_fetch_assoc($sql)){
+		$quantity_trans = count(explode(",", $prop_no));
+		$remarks = "This cancels previous ".$type." issued to ".$row["received_by"]." (".$row[$table_no].")";
+		mysqli_query($conn, "INSERT INTO tbl_ris(ris_no, entity_name, fund_cluster, reference_no, item, description, unit, supplier, serial_no, category, property_no, quantity, cost, total, remarks, received_from, received_from_designation, received_by, received_by_designation, date_released, area, po_id) VALUES ('$trans_ics', '".$row["entity_name"]."', '".$row["fund_cluster"]."', '".$row["reference_no"]."', '".$row["item"]."', '".$row["description"]."', '".$row["unit"]."', '".$row["supplier"]."', '$serial_no', '".$row["category"]."', '$prop_no', '$quantity_trans', '".$row["cost"]."', '0.00', '$remarks', '".$row["received_from"]."', '".$row["received_from_designation"]."', '$received_by', '$received_by_designation', '$date_released', '".$row["area"]."', '".$row["po_id"]."')");
+		
+		$quantity_new = (int)$row["quantity"] - $quantity_trans;
+		mysqli_query($conn, "UPDATE ".$table." SET property_no = '$un_prop_no', serial_no = '$un_serial_no', quantity = '$quantity_new' WHERE ".$table_id." = '$id'");
+
+		$emp_id = $_SESSION["emp_id"];
+		$description = $_SESSION["username"]." created an RIS transfer (".$trans_ics.") to ".$received_by." with a remarks - ".$remarks;
+		mysqli_query($conn, "INSERT INTO tbl_logs(emp_id,description) VALUES('$emp_id','$description')");
+	}
+}
+
 function delete_existing(){
 	global $conn;
 
@@ -625,6 +661,9 @@ switch($call_func){
 		break;
 	case "delete_existing":
 		delete_existing();
+		break;
+	case "create_trans":
+		create_trans();
 		break;
 }
 

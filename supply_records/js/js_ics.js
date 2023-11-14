@@ -85,6 +85,8 @@ function ready_all(){
     		success: function(data){
     			$("#received_by").html("<option disabled selected></option>").append(data);
     			$("#trans_name").html("<option disabled selected></option>").append(data);
+    			$("#issue_name").html("<option disabled selected></option>").append(data);
+					$("#approve_name").html("<option disabled selected></option>").append(data);
     		}
     	});
     });

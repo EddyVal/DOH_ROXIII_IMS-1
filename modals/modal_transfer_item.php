@@ -15,6 +15,7 @@
                                     <option value="" disabled selected></option>
                                     <option value="ICS">Inventory Custodian Slip (ICS)</option>
                                     <option value="PAR">Property Acknowledgement Receipt (PAR)</option>
+                                    <option value="RIS">Requisition and Issue Slip (RIS)</option>
                                 </select>
                             </div>
                         </div>
@@ -44,7 +45,7 @@
                         <div class="row">
                             <div class="col-lg-5">
                                 <div class="form-group row">
-                                    <label class="col-lg-4 col-form-label">ICS/PAR No.:</label>
+                                    <label class="col-lg-4 col-form-label">ICS/PAR/RIS No.:</label>
                                     <div class="col-lg-8">
                                         <input id="trans_ics" type="text" class="form-control">
                                     </div>
@@ -55,6 +56,28 @@
                                     <label class="col-lg-3 col-form-label">Transfer To:</label>
                                     <div class="col-lg-9">
                                         <select id="trans_name" class="select2_demo_1 form-control">
+                                            <option value="" disabled selected></option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="ris_required" class="row" hidden>
+                            <div class="col-lg-6">
+                                <div class="form-group row">
+                                    <label class="col-lg-4 col-form-label">Issued By:</label>
+                                    <div class="col-lg-12">
+                                        <select id="issue_name" class="select2_demo_1 form-control">
+                                            <option value="" disabled selected></option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+														<div class="col-lg-6">
+                                <div class="form-group row">
+                                    <label class="col-lg-4 col-form-label">Approved By:</label>
+                                    <div class="col-lg-12">
+                                        <select id="approve_name" class="select2_demo_1 form-control">
                                             <option value="" disabled selected></option>
                                         </select>
                                     </div>

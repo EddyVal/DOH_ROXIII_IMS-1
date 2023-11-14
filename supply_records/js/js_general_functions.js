@@ -213,7 +213,18 @@ function get_item_trans(id, table, field_id, field){
 
 $("#trans_type").change(function(){
     var po_value = (new Date().toDateInputValue()).split("-");
-    var arr_data = $("#trans_type").val() == "ICS" ? ["ics_id","ics_no","tbl_ics"] : ["par_id","par_no","tbl_par"];
+    var arr_data = $("#trans_type").val() == "ICS" ? 
+                        ["ics_id","ics_no","tbl_ics"] : 
+                        $("#trans_type").val() == "PAR" ? 
+                        ["par_id","par_no","tbl_par"] :
+                        ["ris_id","ris_no","tbl_ris"];
+
+    if($("#trans_type").val() === "RIS") {
+        $("#ris_required").show();
+    } else {
+        $("#ris_required").hide();
+    }
+    
     $.ajax({
         type: "POST",
         url: "php/php_ics.php",
@@ -251,8 +262,16 @@ function get_checked_items(){
 }
 
 function trans_now(){
-    var temp_url = $("#trans_type").val() == "ICS" ? "php/php_ics.php" : "php/php_par.php";
-    var arr_data = _url == "php/php_ics.php" ? ["ICS", "tbl_ics", "ics_id", "ics_no"] : ["PAR", "tbl_par", "par_id", "par_no"];
+    var temp_url = $("#trans_type").val() == "ICS" ?
+							    "php/php_ics.php" : 
+				            $("#trans_type").val() == "PAR" ? 
+								"php/php_par.php" : 
+								"php/php_ris.php";
+    var arr_data = _url == "php/php_ics.php" ? 
+                                ["ICS", "tbl_ics", "ics_id", "ics_no"] : 
+                            _url == "php/php_par.php" ?
+                                ["PAR", "tbl_par", "par_id", "par_no"] : 
+                                ["RIS", "tbl_ris", "ris_id", "ris_no"];
     if($("#trans_ics").val().match($po_regex)){
         if($("#trans_name").val() != null){
             if(get_checked_items() != 0){
@@ -292,7 +311,7 @@ function trans_now(){
             swal("Please fill in!", "Transfer To (New End-User).", "warning");
         }
     }else{
-        swal("Invalid!", "ICS/PAR Number is not valid.", "warning");
+        swal("Invalid!", "ICS/PAR/RIS Number is not valid.", "warning");
     }
 }
 

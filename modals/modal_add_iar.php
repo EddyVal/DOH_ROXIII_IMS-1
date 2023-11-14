@@ -125,11 +125,11 @@
                                                     <div class="col-lg-8">
                                                         <select id="var_inspector" class="select2_demo_1 form-control">
                                                             <option disabled selected></option>
-<option value="Chairperson, Vice Chairperson, Member, Member">Ma. Dorothy C. Hornido, RN|Diana L. Ebay|Claire A. Cañizares|Nhyrma Fe C. Tabugoc</option>
- <option value="Chairperson, Vice Chairperson, Member, Member">Gladys D. Buladaco, RN|Fernando L. Mina|Daryl A. Estrella|Claire A. Cañizares</option>
-     <option value="Chairperson, Vice Chairperson, Member, Member">Leslie C. Cortes, RPh|Dorcas Ga-Dinhayan|Rossie Mae O. Tagudin|Claire A. Cañizares</option>
-     <option value="Chairperson, Vice Chairperson, Member, Member, Member">Emmi Marie J. Cabahug, RN|Joy Dyana V. Cervantes, RN|Nadine Joyce C. Torres, RMT|Engr. Leore Ann M. Bagulor|Claire A. Cañizares</option>
-      <option value="Chairperson, Vice Chairperson, Member">Neil H. Nituda, RMT|Marlon A. Cahayon|Daryl A. Estrella</option>
+                                                            <option value="Chairperson, Vice Chairperson, Member, Member">Ma. Dorothy C. Hornido, RN|Diana L. Ebay|Claire A. Cañizares|Nhyrma Fe C. Tabugoc</option>
+                                                            <option value="Chairperson, Vice Chairperson, Member, Member">Gladys D. Buladaco, RN|Fernando L. Mina|Daryl A. Estrella|Claire A. Cañizares</option>
+                                                            <option value="Chairperson, Vice Chairperson, Member, Member">Leslie C. Cortes, RPh|Dorcas Ga-Dinhayan|Rossie Mae O. Tagudin|Claire A. Cañizares</option>
+                                                            <option value="Chairperson, Vice Chairperson, Member, Member, Member">Emmi Marie J. Cabahug, RN|Joy Dyana V. Cervantes, RN|Nadine Joyce C. Torres, RMT|Engr. Leore Ann M. Bagulor|Claire A. Cañizares</option>
+                                                            <option value="Chairperson, Vice Chairperson, Member">Neil H. Nituda, RMT|Marlon A. Cahayon|Daryl A. Estrella</option>
                                                         </select>
                                                     </div>
                                                 </div>
