@@ -27,10 +27,12 @@ function create_trans(){
 	$table_id 	= mysqli_real_escape_string($conn, $_POST["table_id"]);
 	$table_no 	= mysqli_real_escape_string($conn, $_POST["table_no"]);
 
-	$quer1 = mysqli_query($connhr, "SELECT d.designation, e.designation_fid FROM tbl_employee AS e, ref_designation AS d WHERE d.designation_id = e.designation_fid AND e.emp_id = '$trans_id'");
+	$quer1	 = mysqli_query($connhr, "SELECT d.designation, e.designation_fid FROM tbl_employee AS e, ref_designation AS d WHERE d.designation_id = e.designation_fid AND e.emp_id = '$trans_id'");
 	$requested_by_designation = mysqli_real_escape_string($conn, mysqli_fetch_assoc($quer1)["designation"]);
+
 	$quer2 = mysqli_query($connhr, "SELECT d.designation, e.designation_fid FROM tbl_employee AS e, ref_designation AS d WHERE d.designation_id = e.designation_fid AND e.emp_id = '$issued_by_id'");
 	$issued_by_designation = mysqli_real_escape_string($conn, mysqli_fetch_assoc($quer2)["designation"]);
+
 	$quer3 = mysqli_query($connhr, "SELECT d.designation, e.designation_fid FROM tbl_employee AS e, ref_designation AS d WHERE d.designation_id = e.designation_fid AND e.emp_id = '$approved_by_id'");
 	$approved_by_designation = mysqli_real_escape_string($conn, mysqli_fetch_assoc($quer3)["designation"]);
 	
@@ -38,7 +40,10 @@ function create_trans(){
 	if($row = mysqli_fetch_assoc($sql)){
 		$quantity_trans = count(explode(",", $prop_no));
 		$remarks = "This cancels previous ".$type." issued to ".$row["received_by"]." (".$row[$table_no].")";
-		mysqli_query($conn, "INSERT INTO tbl_ris(ris_no, entity_name, fund_cluster, reference_no, item, description, unit, supplier, lot_no, category, property_no, quantity, cost, total, remarks, requested_by, requested_by_designation, issued_by, issued_by_designation, approved_by, approved_by_designation, date, po_id) VALUES ('$trans_ics', '".$row["entity_name"]."', '".$row["fund_cluster"]."', '".$row["reference_no"]."', '".$row["item"]."', '".$row["description"]."', '".$row["unit"]."', '".$row["supplier"]."', '$serial_no', '".$row["category"]."', '$prop_no', '$quantity_trans', '".$row["cost"]."', '0.00', '$remarks', '$requested_by', '$requested_by_designation', '$issued_by', '$issued_by_designation', '$approved_by', '$approved_by_designation', '$date_released', '".$row["po_id"]."')");
+		echo "INSERT INTO tbl_ris(ris_no, entity_name, fund_cluster, reference_no, item, `description`, unit, supplier, lot_no, category, property_no, quantity, cost, total, remarks, requested_by, requested_by_designation, issued_by, issued_by_designation, approved_by, approved_by_designation, date, po_id) 
+		 											VALUES ('$trans_ics', '".$row["entity_name"]."', '".$row["fund_cluster"]."', '".$row["reference_no"]."', '".$row["item"]."', '".$row["description"]."', '".$row["unit"]."', '".$row["supplier"]."', '$serial_no', '".$row["category"]."', '$prop_no', '$quantity_trans', '".$row["cost"]."', '0.00', '$remarks', '$requested_by', '$requested_by_designation', '$issued_by', '$issued_by_designation', '$approved_by', '$approved_by_designation', '$date_released', '".$row["po_id"]."')";
+		// mysqli_query($conn, "INSERT INTO tbl_ris(ris_no, entity_name, fund_cluster, reference_no, item, `description`, unit, supplier, lot_no, category, property_no, quantity, cost, total, remarks, requested_by, requested_by_designation, issued_by, issued_by_designation, approved_by, approved_by_designation, date, po_id) 
+		// 											VALUES ('$trans_ics', '".$row["entity_name"]."', '".$row["fund_cluster"]."', '".$row["reference_no"]."', '".$row["item"]."', '".$row["description"]."', '".$row["unit"]."', '".$row["supplier"]."', '$serial_no', '".$row["category"]."', '$prop_no', '$quantity_trans', '".$row["cost"]."', '0.00', '$remarks', '$requested_by', '$requested_by_designation', '$issued_by', '$issued_by_designation', '$approved_by', '$approved_by_designation', '$date_released', '".$row["po_id"]."')");
 		
 		$quantity_new = (int)$row["quantity"] - $quantity_trans;
 		mysqli_query($conn, "UPDATE ".$table." SET property_no = '$un_prop_no', serial_no = '$un_serial_no', quantity = '$quantity_new' WHERE ".$table_id." = '$id'");

@@ -275,9 +275,10 @@ function trans_now(){
 								"php/php_ris.php";
     var arr_data = _url == "php/php_ics.php" ? 
                                 ["ICS", "tbl_ics", "ics_id", "ics_no"] : 
-                            _url == "php/php_par.php" ?
+                                _url == "php/php_par.php" ?
                                 ["PAR", "tbl_par", "par_id", "par_no"] : 
                                 ["RIS", "tbl_ris", "ris_id", "ris_no"];
+
     if($("#trans_ics").val().match($po_regex)){
         if($("#trans_name").val() != null){
             if(get_checked_items() != 0){
@@ -338,16 +339,17 @@ function trans_now(){
                                         table_no: arr_data[3]
                                     },
                                 success: function(data){
-                                    swal("Transferred successfully!", "", "success");
-                                    $("#trans_ics").val("");
-                                    $("#trans_name").val(null).change();
-                                    $("#issue_name").val(null).change();
-                                    $("#approve_name").val(null).change();
-                                    $("#trans_type").val(null).change();
-                                    $("#modal_transfer_item .close").click();
-                                    $("#edit_ics_par .close").click();
-                                    var query = $('#search_box').val();
-                                    get_records(active_page, _url, query);
+                                    console.log(data);
+                                    // swal("Transferred successfully!", "", "success");
+                                    // $("#trans_ics").val("");
+                                    // $("#trans_name").val(null).change();
+                                    // $("#issue_name").val(null).change();
+                                    // $("#approve_name").val(null).change();
+                                    // $("#trans_type").val(null).change();
+                                    // $("#modal_transfer_item .close").click();
+                                    // $("#edit_ics_par .close").click();
+                                    // var query = $('#search_box').val();
+                                    // get_records(active_page, _url, query);
                                 }
                             });
                         }else{
