@@ -104,6 +104,7 @@ if(!isset($_SESSION["username"])){
                     <li><a href="supply_records/par.php"><i class="fa fa-clipboard"></i> PAR</a></li>
                     <li><a href="supply_records/ris.php"><i class="fa fa-clipboard"></i> RIS</a></li>
                     <li><a href="supply_records/ptr.php"><i class="fa fa-clipboard"></i> PTR</a></li>
+                    <li><a href="supply_records/ptr.php"><i class="fa fa-clipboard"></i> GATE PASS</a></li>
                 </ul>
             </li>
             <li>

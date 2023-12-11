@@ -58,6 +58,7 @@ if(!isset($_SESSION["username"])){
                             <li><a href="par.php"><i class="fa fa-clipboard"></i> PAR</a></li>
                             <li><a href="ris.php"><i class="fa fa-clipboard"></i> RIS</a></li>
                             <li><a href="ptr.php"><i class="fa fa-clipboard"></i> PTR</a></li>
+                            <li><a href="supply_records/ptr.php"><i class="fa fa-clipboard"></i> GATE PASS</a></li>
                         </ul>
                     </li>
                     <li>
