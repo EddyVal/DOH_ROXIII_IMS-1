@@ -53,8 +53,6 @@ function print_gatepass() {
     }
 }
 
-
-
 function get_items_issuances(){
     global $conn;
 
@@ -185,9 +183,79 @@ function delete_gatepass(){
     mysqli_query($conn, "INSERT INTO tbl_logs(emp_id,description) VALUES('$emp_id','$description')");
 }
 
-function update_gatepass(){
+function update_gatepass() {
     global $conn;
+
+    $gatepass_id = mysqli_real_escape_string($conn, $_POST['gatepass_id']);
+    $control_number = mysqli_real_escape_string($conn, $_POST['control_number']);
+    $authorized_personnel = mysqli_real_escape_string($conn, $_POST['authorized_personnel']);
+    $driver = mysqli_real_escape_string($conn, $_POST['driver']);
+    $plate_number = mysqli_real_escape_string($conn, $_POST['plate_number']);
+    $vehicle_type = mysqli_real_escape_string($conn, $_POST['vehicle_type']);
+    $checked_by = mysqli_real_escape_string($conn, $_POST['checked_by']);
+    $approved_by = mysqli_real_escape_string($conn, $_POST['approved_by']);
+
+    $sql = "UPDATE tbl_gatepass SET 
+        control_number = '$control_number',
+        authorized_personnel = '$authorized_personnel',
+        driver = '$driver',
+        plate_number = '$plate_number',
+        vehicle_type = '$vehicle_type',
+        checked_by = '$checked_by',
+        approved_by = '$approved_by'
+        WHERE id = $gatepass_id";
+    mysqli_query($conn, $sql);
+
+    $statuses = $_POST['status'];
+    $issuance_ids = $_POST['issuance_id'];
+    $issuance_no = $_POST['issuance_no'];
+    $programs = $_POST['program'];
+    $purposes = $_POST['purpose'];
+
+    $retained_ids = [];
+
+    for ($i = 0; $i < count($statuses); $i++) {
+        $status = mysqli_real_escape_string($conn, $statuses[$i]);
+        $issuance_id = intval($issuance_ids[$i]);
+        $issuance_data = explode("#", $issuance_no[$i]);
+        $issuance_type = $issuance_data[0];
+        $issuance_number = $issuance_data[1];
+        $program = mysqli_real_escape_string($conn, $programs[$i]);
+        $purpose = mysqli_real_escape_string($conn, $purposes[$i]);
+
+        if ($status === 'old') {
+            $sql = "UPDATE tbl_gatepass_details SET 
+                issuance_program = '$program',
+                issuance_purpose = '$purpose'
+                WHERE id = $issuance_id AND gatepass_id = $gatepass_id";
+            mysqli_query($conn, $sql);
+            $retained_ids[] = $issuance_id;
+
+        } else{
+            $sql = "INSERT INTO tbl_gatepass_details (gatepass_id, issuance_id, issuance_type, issuance_number, issuance_program, issuance_purpose) 
+                VALUES ($gatepass_id, $issuance_id, '$issuance_type', '$issuance_number', '$program', '$purpose')";
+            mysqli_query($conn, $sql);
+            $new_id = mysqli_insert_id($conn);
+            $retained_ids[] = $new_id;
+        }
+    }
+    
+    if (!empty($retained_ids)) {
+        $ids_str = implode(',', array_map('intval', $retained_ids));
+        $sql = "DELETE FROM tbl_gatepass_details 
+                WHERE gatepass_id = $gatepass_id AND id NOT IN ($ids_str)";
+        mysqli_query($conn, $sql);
+    } else {
+        $sql = "DELETE FROM tbl_gatepass_details WHERE gatepass_id = $gatepass_id";
+        mysqli_query($conn, $sql);
+    }
+    $emp_id = $_SESSION["emp_id"];
+    $description = $_SESSION["username"]." updated a Gatepass No - ".$control_number;
+    mysqli_query($conn, "INSERT INTO tbl_logs(emp_id,description) VALUES('$emp_id','$description')");
+
+    echo json_encode(['status' => 'success']);
 }
+
 
 function insert_gatepass() {
     global $conn;
@@ -240,12 +308,12 @@ function insert_gatepass() {
 }
 
 
-function get_gatepass(){
+function get_gatepass() {
     global $conn;
 
-    if(!$conn) {
+    if (!$conn) {
         echo "<table class=\"table table-bordered\">
-                <tr><th style=\"border: 2px solid black;\" colspan=\"10\">Not connected to the server.</th></tr>
+                <tr><th style=\"border: 2px solid black;\" colspan=\"11\">Not connected to the server.</th></tr>
               </table>";
         return;
     }
@@ -254,50 +322,75 @@ function get_gatepass(){
     $page = max(1, (int)$_POST["page"]);
     $start = ($page - 1) * $limit;
     $search = mysqli_real_escape_string($conn, $_POST["search"]);
-    
-    $query = "SELECT * FROM tbl_gatepass";
-    if($search != "") {
-        $query .= " WHERE control_number LIKE '%$search%' OR authorized_personnel LIKE '%$search%' OR plate_number LIKE '%$search%' OR driver LIKE '%$search%' OR vehicle_type LIKE '%$search%' OR checked_by LIKE '%$search%'";
+
+    $base_query = "
+        SELECT g.*, 
+               GROUP_CONCAT(CONCAT(d.issuance_type, '#', d.issuance_number) SEPARATOR ', ') AS issuance_str
+        FROM tbl_gatepass AS g
+        LEFT JOIN tbl_gatepass_details AS d ON g.id = d.gatepass_id
+    ";
+
+    if ($search != "") {
+        $base_query .= "
+            WHERE g.control_number LIKE '%$search%' 
+               OR g.authorized_personnel LIKE '%$search%' 
+               OR g.plate_number LIKE '%$search%' 
+               OR g.driver LIKE '%$search%' 
+               OR g.vehicle_type LIKE '%$search%' 
+               OR g.checked_by LIKE '%$search%' 
+               OR d.issuance_number LIKE '%$search%'
+        ";
     }
 
-    $sql_orig = mysqli_query($conn, $query);
+    $sql_orig = mysqli_query($conn, $base_query . " GROUP BY g.id");
     $total_data = mysqli_num_rows($sql_orig);
 
-    $query .= " ORDER BY id DESC LIMIT $start, $limit";
+    $query = $base_query . " GROUP BY g.id ORDER BY g.id DESC LIMIT $start, $limit";
     $sql = mysqli_query($conn, $query);
 
     $tbody = "";
-    if($total_data > 0){
-        while($row = mysqli_fetch_assoc($sql)){
+    if ($total_data > 0) {
+        while ($row = mysqli_fetch_assoc($sql)) {
             $tbody .= "<tr>
-                        <td>{$row['id']}</td>
-                        <td>{$row['control_number']}</td>
-                        <td>{$row['authorized_personnel']}</td>
-                        <td>{$row['plate_number']}</td>
-                        <td>{$row['driver']}</td>
-                        <td>{$row['vehicle_type']}</td>
-                        <td>{$row['checked_by']}</td>
-                        <td>{$row['approved_by']}</td>
-                        <td>{$row['created_at']}</td>
-                        <td>
-                            <center>
-                                <button id=\"{$row['id']}\" class=\"btn btn-xs btn-info dim\" data-toggle=\"tooltip\" title=\"Print\" onclick=\"print_gatepass(this.id);\">
-                                    <i class=\"fa fa-print\"></i>
-                                </button>
-                                <button id=\"{$row['id']}\" class=\"btn btn-xs btn-danger dim\" data-toggle=\"tooltip\" title=\"Delete\" onclick=\"delete_gatepass(this.id);\">
-                                    <i class=\"fa fa-trash\"></i>
-                                </button>
-                            </center>
-                        </td>
-                    </tr>";
+                <td>{$row['id']}</td>
+                <td>{$row['control_number']}</td>
+                <td style=\"font-size: 10px;\">{$row['issuance_str']}</td>
+                <td>{$row['authorized_personnel']}</td>
+                <td>{$row['plate_number']}</td>
+                <td>{$row['driver']}</td>
+                <td>{$row['vehicle_type']}</td>
+                <td>" . explode("|", $row['checked_by'])[0] . "</td>
+                <td>" . explode("|", $row['approved_by'])[0] . "</td>
+                <td>{$row['created_at']}</td>
+                <td>
+                    <center>
+                        <button id=\"{$row['id']}\" class=\"btn btn-xs btn-info dim\" data-toggle=\"tooltip\" title=\"Print\" onclick=\"print_gatepass(this.id);\">
+                            <i class=\"fa fa-print\"></i>
+                        </button>
+                        <button id=\"{$row['id']}\" class=\"btn btn-xs btn-warning dim\" data-toggle=\"tooltip\" title=\"Edit\" onclick=\"edit_gatepass(this.id);\">
+                            <i class=\"fa fa-edit\"></i>
+                        </button>
+                        <button id=\"{$row['id']}\" class=\"btn btn-xs btn-danger dim\" data-toggle=\"tooltip\" title=\"Delete\" onclick=\"delete_gatepass(this.id);\">
+                            <i class=\"fa fa-trash\"></i>
+                        </button>
+                    </center>
+                </td>
+            </tr>";
         }
     } else {
-        $tbody = "<tr><td colspan=\"10\" style=\"text-align: center;\">No data found.</td></tr>";
+        $tbody = "<tr><td colspan=\"11\" style=\"text-align: center;\">No data found.</td></tr>";
     }
 
-    $pagination = create_table_pagination($page, $limit, $total_data, ["ID", "Control#", "Authorized Personnel", "Plate#", "Driver", "Vehicle Type", "Checked by", "Approved by", "Date Created", ""]);
+    $pagination = create_table_pagination(
+        $page,
+        $limit,
+        $total_data,
+        ["ID", "Control#", "Issuance Numbers", "Authorized Personnel", "Plate#", "Driver", "Vehicle Type", "Checked by", "Approved by", "Date Created", ""]
+    );
+
     echo $pagination[0] . $tbody . $pagination[1];
 }
+
 
 
 $call_func = mysqli_real_escape_string($conn, $_POST["call_func"]);
@@ -319,6 +412,8 @@ if ($call_func === "get_records") {
     delete_gatepass();
 }elseif($call_func === "get_sources"){
     get_sources();
+}elseif($call_func === "update_gatepass"){
+    update_gatepass();
 }
 
 ?>

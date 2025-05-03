@@ -29,6 +29,7 @@ function ready_all(){
             url: _url,
             success: function(data){
                 $("#chairperson").html("<option disabled selected></option>").append(data);
+                $("#edit_chairperson").html("<option disabled selected></option>").append(data);
             }
         });
     });
@@ -40,6 +41,7 @@ function ready_all(){
             url: _url,
             success: function(data){
                 $("#reference_no").html(data);
+                $("#edit_reference_no").html(data);
             }
         });
     });
@@ -69,6 +71,33 @@ $("#reference_no").change(function(){
     });
 });
 
+$("#edit_reference_no").change(function(){
+    $.ajax({
+        type: "POST",
+        data: {call_func: "get_items_po", po_numbers: $("#edit_reference_no").val()},
+        url: _url,
+        success: function(data){
+            var items = JSON.parse(data.replace(/&quot;/g, '"'));
+            $("#edit_item_table_body").empty();
+            items.forEach(function(item) {
+                var row = `<tr>
+                    <td class="d-none">
+                        <input type="hidden" name="status[]" value="new">
+                        <input type="hidden" name="item_id[]" value="${item.id}">
+                    </td>
+                    <td>${item.item_description}</td>
+                    <td style='text-align: center;'>${item.quantity_delivered}</td>
+                    <td><input type='text' class='form-control' name='rsd_control_no[]' /></td>
+                    <td><input type='date' class='form-control' name='approved_date[]' value='${item.date_delivered}' /></td>
+                    <td>${item.location}</td>
+                    <td><button type='button' class='btn btn-danger btn-sm dim' onclick='removeRow(this)'><i class='fa fa-trash'></i> </button></td>
+                </tr>`;
+                $("#edit_item_table_body").append(row);
+            });
+        }
+    });
+});
+
 $('#insert_rfi').on('submit', function(event) {
     event.preventDefault();
 
@@ -90,6 +119,31 @@ $('#insert_rfi').on('submit', function(event) {
         },
         error: function(xhr, status, error) {
             swal("Error saving rfi!", error, "error");
+        }
+    });
+});
+
+$('#update_rfi').on('submit', function(event) {
+    event.preventDefault();
+
+    let formData = $(this).serialize();
+    formData += `&${encodeURIComponent('call_func')}=${encodeURIComponent('update_rfi')}`;
+
+    console.log("Serialized Form Data:", formData);
+    
+    $.ajax({
+        url: _url,
+        type: 'POST',
+        data: formData,
+        success: function(response) {
+            swal("Updated!", "RFI updated successfully.", "success");
+            setTimeout(function () {
+                location.reload();
+            }, 1500);
+            
+        },
+        error: function(xhr, status, error) {
+            swal("Error updating rfi!", error, "error");
         }
     });
 });
@@ -200,5 +254,40 @@ function delete_rfi(id){
                 setTimeout(function () { location.reload(); }, 1500);
             }
         });
+    });
+}
+
+function edit_rfi(id) {
+    $.ajax({
+        url: _url,
+        type: 'POST',
+        data: { call_func: "print_rfi", id: id },
+        success: function(response) {
+            var data = JSON.parse(response.replace(/&quot;/g, '"'));
+            console.log(data);
+            $('#edit_rfi_id').val(data.rfi.id);
+            $('#edit_control_number').val(data.rfi.control_number);
+            $('#edit_chairperson').val(data.rfi.inspector).trigger('change');
+            $('#edit_reference_no').val(data.rfi.po_number.split("|")).trigger('change');
+
+            let tbody = '';
+            data.rfi_details.forEach(item => {
+                tbody += `<tr>
+                    <td class="d-none">
+                        <input type="hidden" name="status[]" value="old">
+                        <input type="hidden" name="item_id[]" value="${item.id}">
+                    </td>
+                    <td><b>${item.item_name}</b> - ${item.description}</td>
+                    <td>${item.main_stocks}</td>
+                    <td><input type="text" name="rsd_control_no[]" class="form-control" value="${item.rsd_no}" required></td>
+                    <td><input type="date" name="approved_date[]" class="form-control" value="${item.approved_date}" required></td>
+                    <td>${item.location}</td>
+                    <td><button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)"><i class="fa fa-trash"></i></button></td>
+                </tr>`;
+            });
+
+            $('#edit_item_table_body').html(tbody);
+            $('#edit_rfi').modal('show');
+        }
     });
 }

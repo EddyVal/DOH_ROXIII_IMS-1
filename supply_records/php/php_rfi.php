@@ -120,9 +120,62 @@ function delete_rfi(){
     mysqli_query($conn, "INSERT INTO tbl_logs(emp_id,description) VALUES('$emp_id','$description')");
 }
 
-function update_rfi(){
+function update_rfi() {
     global $conn;
+
+    $rfi_id = mysqli_real_escape_string($conn, $_POST['edit_rfi_id']);
+    $control_number = mysqli_real_escape_string($conn, $_POST['control_number']);
+    $inspector = mysqli_real_escape_string($conn, $_POST['chairperson']);
+    $po_numbers = $_POST['reference_no'];
+    $statuses = $_POST['status'];
+    $item_ids = $_POST['item_id'];
+    $rsd_control_nos = $_POST['rsd_control_no'];
+    $approved_dates = $_POST['approved_date'];
+
+    $po_numbers_string = mysqli_real_escape_string($conn, implode('|', $po_numbers));
+
+    // Update the main RFI record
+    $sql_rfi = "UPDATE tbl_rfi SET control_number = '$control_number', inspector = '$inspector', po_number = '$po_numbers_string' WHERE id = $rfi_id";
+    mysqli_query($conn, $sql_rfi);
+
+    $retained_ids = [];
+
+    for ($i = 0; $i < count($statuses); $i++) {
+        $status = $statuses[$i];
+        $item_id = intval($item_ids[$i]);
+        $rsd_no = mysqli_real_escape_string($conn, $rsd_control_nos[$i]);
+        $approved_date = mysqli_real_escape_string($conn, $approved_dates[$i]);
+
+        if ($status === 'old') {
+            $sql_detail = "UPDATE tbl_rfi_details SET rsd_no = '$rsd_no', approved_date = '$approved_date' WHERE id = $item_id AND rfi_id = $rfi_id";
+            mysqli_query($conn, $sql_detail);
+            $retained_ids[] = $item_id;
+        } else if ($status === 'new') {
+            $sql_detail = "INSERT INTO tbl_rfi_details (rfi_id, po_id, rsd_no, approved_date) 
+                           VALUES ('$rfi_id', '$item_id', '$rsd_no', '$approved_date')";
+            mysqli_query($conn, $sql_detail);
+            $new_id = mysqli_insert_id($conn);
+            $retained_ids[] = $new_id;
+        }
+    }
+
+    // Delete removed items
+    if (!empty($retained_ids)) {
+        $ids_str = implode(',', array_map('intval', $retained_ids));
+        $sql_delete = "DELETE FROM tbl_rfi_details WHERE rfi_id = $rfi_id AND id NOT IN ($ids_str)";
+    } else {
+        $sql_delete = "DELETE FROM tbl_rfi_details WHERE rfi_id = $rfi_id";
+    }
+    mysqli_query($conn, $sql_delete);
+
+    // Log
+    $emp_id = $_SESSION["emp_id"];
+    $description = $_SESSION["username"] . " updated RFI No. " . $control_number;
+    mysqli_query($conn, "INSERT INTO tbl_logs(emp_id,description) VALUES('$emp_id','$description')");
+
+    echo json_encode(['status' => 'success']);
 }
+
 
 function insert_rfi() {
     global $conn;
@@ -198,6 +251,9 @@ function get_rfi(){
                                 <button id=\"{$row['id']}\" class=\"btn btn-xs btn-info dim\" data-toggle=\"tooltip\" title=\"Print\" onclick=\"print_rfi(this.id);\">
                                     <i class=\"fa fa-print\"></i>
                                 </button>
+                                <button id=\"{$row['id']}\" class=\"btn btn-xs btn-warning dim\" data-toggle=\"tooltip\" title=\"Edit\" onclick=\"edit_rfi(this.id);\">
+                                    <i class=\"fa fa-edit\"></i>
+                                </button>
                                 <button id=\"{$row['id']}\" class=\"btn btn-xs btn-danger dim\" data-toggle=\"tooltip\" title=\"Delete\" onclick=\"delete_rfi(this.id);\">
                                     <i class=\"fa fa-trash\"></i>
                                 </button>
@@ -230,6 +286,8 @@ if ($call_func === "get_records") {
     print_rfi();
 }elseif ($call_func === "delete_rfi"){
     delete_rfi();
+}elseif ($call_func === "update_rfi"){
+    update_rfi();
 }
 
 ?>

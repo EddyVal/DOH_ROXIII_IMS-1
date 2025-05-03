@@ -76,38 +76,60 @@ function reload_item($num_iss){
 	echo $table;
 }
 
-function get_items_all(){
+function get_items_all() {
 	global $conn;
 
 	$j = 1;
 	$tbody = "";
 	$po_numbers = $_POST["po_numbers"];
-	for($i = 0; $i < count((is_countable($po_numbers)?$po_numbers:[])); $i++){
-		$sql = mysqli_query($conn, "SELECT po_id, category, item_name, description, unit_cost, quantity, sn_ln, exp_date FROM tbl_po WHERE po_number LIKE '".$po_numbers[$i]."'");
-		while($row = mysqli_fetch_assoc($sql)){
+
+	$fund_cluster = '';
+	
+	foreach ($po_numbers as $po) {
+		$po_safe = mysqli_real_escape_string($conn, $po);
+		$fc_result = mysqli_query($conn, "SELECT fund_cluster FROM tbl_iar WHERE po_number LIKE '$po_safe' LIMIT 1");
+		if ($fc_result && mysqli_num_rows($fc_result) > 0) {
+			$fc_row = mysqli_fetch_assoc($fc_result);
+			$fund_cluster = $fc_row['fund_cluster'];
+			break;
+		}
+	}
+
+	for ($i = 0; $i < count((is_countable($po_numbers) ? $po_numbers : [])); $i++) {
+		$po_safe = mysqli_real_escape_string($conn, $po_numbers[$i]);
+		$sql = mysqli_query($conn, "SELECT po_id, category, item_name, description, unit_cost, quantity, sn_ln, exp_date 
+			FROM tbl_po 
+			WHERE po_number LIKE '$po_safe'");
+
+		while ($row = mysqli_fetch_assoc($sql)) {
 			$quan_unit = explode(" ", $row["quantity"]);
-			if($quan_unit[0] != 0){
-				$tbody.="<tr>
-						<td hidden style=\"border: thin solid black;\">".$row["po_id"]."</td>
-		                <td style=\"border: thin solid black;\">".$po_numbers[$i]."</td>
-		                <td style=\"border: thin solid black;\">".$row["item_name"]."</td>
-		                <td style=\"border: thin solid black;\">".$row["description"]."</td>
-		                <td hidden style=\"border: thin solid black;\">".$row["category"]."</td>
-		                <td style=\"border: thin solid black;\">".$row["sn_ln"]."</td>
-		                <td style=\"border: thin solid black;\">".$row["exp_date"]."</td>
-		                <td style=\"border: thin solid black;\">".$quan_unit[0]."</td>
-		                <td style=\"border: thin solid black;\"><input type=\"number\" onkeyup=\"validate_input_quantity(this, '".$quan_unit[0]."', '".$j."', '".$row["unit_cost"]."')\"></td>
-		                <td hidden style=\"border: thin solid black;\">".$quan_unit[1]."</td>
-		                <td style=\"border: thin solid black;\">".$row["unit_cost"]."</td>
-		                <td style=\"border: thin solid black;\"><span id=\"totid".$j."\"></span></td>
-		                <td style=\"border: thin solid black;\"></td>
-	                </tr>";
-	                $j++;
+			if ((int)$quan_unit[0] != 0) {
+				$tbody .= "<tr>
+					<td hidden style=\"border: thin solid black;\">".$row["po_id"]."</td>
+					<td style=\"border: thin solid black;\">".$po_numbers[$i]."</td>
+					<td style=\"border: thin solid black;\">".$row["item_name"]."</td>
+					<td style=\"border: thin solid black;\">".$row["description"]."</td>
+					<td hidden style=\"border: thin solid black;\">".$row["category"]."</td>
+					<td style=\"border: thin solid black;\">".$row["sn_ln"]."</td>
+					<td style=\"border: thin solid black;\">".$row["exp_date"]."</td>
+					<td style=\"border: thin solid black;\">".$quan_unit[0]."</td>
+					<td style=\"border: thin solid black;\"><input type=\"number\" onkeyup=\"validate_input_quantity(this, '".$quan_unit[0]."', '".$j."', '".$row["unit_cost"]."')\"></td>
+					<td hidden style=\"border: thin solid black;\">".$quan_unit[1]."</td>
+					<td style=\"border: thin solid black;\">".$row["unit_cost"]."</td>
+					<td style=\"border: thin solid black;\"><span id=\"totid".$j."\"></span></td>
+					<td style=\"border: thin solid black;\"></td>
+				</tr>";
+				$j++;
 			}
 		}
 	}
-	echo $tbody;
+
+	echo json_encode([
+		'fund_cluster' => $fund_cluster,
+		'table_rows' => $tbody
+	]);
 }
+
 
 function iss_validator(){
 	global $conn;

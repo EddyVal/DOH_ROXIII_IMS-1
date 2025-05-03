@@ -84,8 +84,10 @@ function ready_all(){
             type: "POST",
             data: {call_func: "get_items_all", po_numbers: $("#ris_po_multiple").val()},
             url: "php/php_ris.php",
+            dataType: 'JSON',
             success: function(data){
-                $("table#ris_items tbody").html(data);
+                $('#fund_cluster').val(data["fund_cluster"]);
+                $("table#ris_items tbody").html(data["table_rows"]);
             }
         });
     });

@@ -382,19 +382,32 @@ function get_item_details(){
 	}
 }
 
-function get_item(){
+function get_item() {
 	global $conn;
 
 	$po_number = mysqli_real_escape_string($conn, $_POST["po_number"]);
-	$sql = mysqli_query($conn, "SELECT p.quantity, p.po_id, p.item_id, i.item FROM tbl_po AS p, ref_item AS i WHERE p.item_id = i.item_id AND p.po_number LIKE '$po_number' AND p.inspection_status = '1'");
-	if(mysqli_num_rows($sql) != 0){
-		while($row = mysqli_fetch_assoc($sql)){
+	$fund_cluster_result = mysqli_query($conn, "SELECT fund_cluster FROM tbl_iar WHERE po_number LIKE '$po_number' LIMIT 1");
+	$fund_cluster = '';
+	if (mysqli_num_rows($fund_cluster_result) > 0) {
+		$row_fc = mysqli_fetch_assoc($fund_cluster_result);
+		$fund_cluster = $row_fc['fund_cluster'];
+	}
+	$sql = mysqli_query($conn, "SELECT p.quantity, p.po_id, p.item_id, i.item 
+		FROM tbl_po AS p, ref_item AS i 
+		WHERE p.item_id = i.item_id 
+		AND p.po_number LIKE '$po_number' 
+		AND p.inspection_status = '1'");
+
+	$output = '';
+	if (mysqli_num_rows($sql) != 0) {
+		while ($row = mysqli_fetch_assoc($sql)) {
 			$quan = explode(" ", $row["quantity"]);
-			if((int)$quan[0] != 0){
-				echo "<option value=\"".$row["po_id"]."\">".$row["item"]."</option>";
+			if ((int)$quan[0] != 0) {
+				$output .= "<option value=\"".$row["po_id"]."\">".$row["item"]."</option>";
 			}
 		}
 	}
+	echo json_encode(array('options' => $output, 'fund_cluster' => $fund_cluster));
 }
 
 function get_category(){

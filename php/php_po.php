@@ -729,7 +729,7 @@ function insert_po_various(){
 	for($i = 0; $i < count($items); $i++){
 		$item_id = $items[$i][0];
 		$item_name = mysqli_real_escape_string($conn, $items[$i][1]);
-		$description = mysqli_real_escape_string($conn, $items[$i][2]);
+		$description = mysqli_real_escape_string($conn, preg_replace('/["]+/', '', trim(strip_tags($items[$i][2]))));
 		$category = $items[$i][3];
 		$sn_ln = $items[$i][4];
 		$exp_date = $items[$i][5];

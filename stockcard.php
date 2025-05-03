@@ -52,7 +52,7 @@ if(!isset($_SESSION["username"])){
                                 <div class="input-group-prepend">
                                     <span class="input-group-addon"><i class="fa fa-search"></i></span>
                                 </div>
-                                <input id="searchkw" name="seach_box" type="text" class="form-control" placeholder="Search...">
+                                <input id="searchkw" name="seach_box" type="text" class="form-control" placeholder="Search item or PO#...">
                             </div>
                         </div>
                     </div>

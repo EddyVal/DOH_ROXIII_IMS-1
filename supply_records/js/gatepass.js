@@ -40,6 +40,11 @@ function ready_all(){
                 $('#driver').typeahead({ source: sources.driver });
                 $('#plate_number').typeahead({ source: sources.plate_number });
                 $('#vehicle_type').typeahead({ source: sources.vehicle_type });
+
+                $('#edit_authorized_personnel').typeahead({ source: sources.authorized_personnel });
+                $('#edit_driver').typeahead({ source: sources.driver });
+                $('#edit_plate_number').typeahead({ source: sources.plate_number });
+                $('#edit_vehicle_type').typeahead({ source: sources.vehicle_type });
             }
         })
     });
@@ -63,6 +68,24 @@ $('input[name="issuance_type"]').change(function() {
     })
 });
 
+$('input[name="edit_issuance_type"]').change(function() {
+    selectedType = $(this).val();
+    table = $(this).data("table");
+    field = $(this).data("field");
+    id = $(this).data("id");
+    $("#edit_issuance_type").html(selectedType+ " Number");
+    $("#edit_issuance_no").val(null).trigger('change')
+
+    $.ajax({
+        type: "POST",
+        url: _url,
+        data: {call_func: "get_issuance_no", table: table, field: field, id: id},
+        success: function(data){
+            $("#edit_issuance_no").html(data);
+        }
+    })
+});
+
 $("#checked_by").ready(function(){
     $.ajax({
         type: "POST",
@@ -71,6 +94,10 @@ $("#checked_by").ready(function(){
         success: function(data){
             $("#checked_by").html("<option disabled selected></option>").append(data);
             $("#approved_by").html("<option disabled selected></option>").append(data);
+
+            $("#edit_checked_by").html("<option disabled selected></option>").append(data);
+            $("#edit_approved_by").html("<option disabled selected></option>").append(data);
+
             $('#approved_by option').each(function() {
                 if($(this).text() == $("#control_number").data("ppb")){
                     $(this).prop("selected", true).change();
@@ -118,6 +145,46 @@ function insert_issuance(){
     });
 }
 
+function edit_insert_issuance(){
+    let issuances = $("#edit_issuance_no").val();
+    $.ajax({
+        type: 'POST',
+        url: _url,
+        data: {call_func: "get_items_issuances", table: table, field: field, issuances: issuances},
+        success: function(data){
+            let items = JSON.parse(data)
+            console.log(items)
+            if(items.error){
+                swal("No selected issuances!", "Kindly select at least 1 issuance number.", "warning");
+                return;
+            }
+            items.forEach(function(item) {
+                var row = `<tr>
+                    <td class='d-none'><input type='text' name='status[]' value='new'></td>
+                    <td class='d-none'><input type='text' name='issuance_id[]' value='${item[id]}'></td>
+                    <td><input type='text' class='form-control' name='issuance_no[]' value='${selectedType}#${item[field]}' readonly></td>
+                    <td>${item.reference_no}</td>
+                    <td><b>${item.item}</b> - ${item.description}</td>
+                    <td>
+                        ${
+                            selectedType == "RIS" 
+                            ? item.lot_no.split("|").filter(part => part.trim() !== "").map(part => part.trim()).join(",") 
+                            : item.serial_no
+                        }
+                    </td>
+                    <td>${item.quantity}</td>
+                    <td>${item.unit}</td>
+                    <td><input type='text' class='form-control' name='program[]' value='${selectedType == "RIS" ? item.office : selectedType == "PTR" ? item.to : item.received_by}'></td>
+                    <td><input type='text' class='form-control' name='purpose[]' value='${selectedType == "RIS" ? item.purpose : selectedType == "PTR" ? item.reason : item.remarks}'></td>
+                    <td><button type='button' class='btn btn-danger btn-sm dim' onclick='removeRow(this)'><i class='fa fa-trash'></i> </button></td>
+                </tr>`;
+                $("#edit_item_table_body").append(row);
+            });
+            $("#edit_issuance_no").val(null).trigger('change')
+        }
+    });
+}
+
 $('#insert_gatepass').on('submit', function(event) {
     event.preventDefault();
 
@@ -143,9 +210,39 @@ $('#insert_gatepass').on('submit', function(event) {
             
         },
         error: function(xhr, status, error) {
-            swal("Error saving rfi!", error, "error");
+            swal("Error saving gatepass!", error, "error");
         }
     });
+});
+
+$('#update_gatepass').on('submit', function(event) {
+    event.preventDefault();
+
+    const issuanceRows = $('#edit_item_table_body').find('tr').length;
+
+    if (issuanceRows === 0) {
+        swal("Error!", "Please add at least one issuance before saving.", "error");
+        return; 
+    }
+
+    let formData = $(this).serialize();
+    formData += `&${encodeURIComponent('call_func')}=${encodeURIComponent('update_gatepass')}`;
+
+    console.log("Serialized Form Data:", formData);
+    
+    $.ajax({
+        url: _url,
+        type: 'POST',
+        data: formData,
+        success: function(response) {
+            swal("Updated!", "Gatepass updated successfully.", "success");
+            setTimeout(function () {location.reload();}, 1500);
+            
+        },
+        error: function(xhr, status, error) {
+            swal("Error updating gatepass!", error, "error");
+        }
+    }); 
 });
 
 function print_gatepass(gid){
@@ -232,5 +329,50 @@ function delete_gatepass(gid){
                 setTimeout(function () { location.reload(); }, 1500);
             }
         });
+    });
+}
+
+function edit_gatepass(id) {
+    $.ajax({
+        url: _url,
+        type: 'POST',
+        data: { call_func: "print_gatepass", id: id },
+        dataType: 'json',
+        success: function(response) {
+            console.log(response)
+            $('#edit_gatepass_id').val(response.gatepass.id);
+            $('#edit_control_number').val(response.gatepass.control_number);
+            $('#edit_authorized_personnel').val(response.gatepass.authorized_personnel);
+            $('#edit_driver').val(response.gatepass.driver);
+            $('#edit_plate_number').val(response.gatepass.plate_number);
+            $('#edit_vehicle_type').val(response.gatepass.vehicle_type);
+            $('#edit_checked_by').val(response.gatepass.checked_by).trigger('change');
+            $('#edit_approved_by').val(response.gatepass.approved_by).trigger('change');
+
+            let tbody = '';
+            response.items.forEach(item => {
+                tbody += `<tr>
+                    <td class='d-none'><input type='text' name='status[]' value='old'></td>
+                    <td class='d-none'><input type='text' name='issuance_id[]' value='${item.id}'></td>
+                    <td><input type='text' class='form-control' name='issuance_no[]' value='${item.issuance_type}#${item.issuance_number}' readonly></td>
+                    <td>${item.reference_no}</td>
+                    <td><b>${item.item}</b> - ${item.description}</td>
+                    <td>
+                        ${
+                            item.issuance_type == "RIS" 
+                            ? item.lot_no.split("|").filter(part => part.trim() !== "").map(part => part.trim()).join(",") 
+                            : item.serial_no
+                        }
+                    </td>
+                    <td>${item.quantity}</td>
+                    <td>${item.unit}</td>
+                    <td><input type='text' class='form-control' name='program[]' value='${item.issuance_program}'></td>
+                    <td><input type='text' class='form-control' name='purpose[]' value='${item.issuance_purpose}'></td>
+                    <td><button type='button' class='btn btn-danger btn-sm dim' onclick='removeRow(this)'><i class='fa fa-trash'></i> </button></td>
+                </tr>`;
+            });
+            $('#edit_item_table_body').html(tbody);
+            $('#edit_gatepass').modal('show');
+        }
     });
 }

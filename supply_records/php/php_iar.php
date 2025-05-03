@@ -500,8 +500,15 @@ function get_records(){
 	if($total_data != 0){
 		while($row = mysqli_fetch_assoc($sql)){
 			$pn = $row["po_number"];
-			$printAction = !in_array($row["iar_type"], $special_category) ? "print_iar" : "print_iar_dm";
-			$xlsAction = !in_array($row["iar_type"], $special_category) ? "download_xls" : "download_xls_dm";
+			$iar_number = $row["iar_number"];
+			$iar_types = [];
+			$get_iar_types = mysqli_query($conn, "SELECT po_type FROM tbl_po WHERE iar_no LIKE '$iar_number'");
+			while ($ri = mysqli_fetch_assoc($get_iar_types)) {
+				$iar_types[] = $ri["po_type"];
+			}
+			$has_special = count(array_intersect($iar_types, $special_category)) > 0;
+			$printAction = $has_special ? "print_iar_dm" : "print_iar";
+			$xlsAction   = $has_special ? "download_xls_dm" : "download_xls";
 
 			$tbody .= "<tr>
 						<td>{$row["iar_id"]}</td>

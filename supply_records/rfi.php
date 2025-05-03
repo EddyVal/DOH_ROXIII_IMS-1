@@ -73,6 +73,7 @@ if(!isset($_SESSION["username"])){
             <?php
                 require "../assets/small_chat.php";
                 require "../modals/modal_add_rfi.php";
+                require "../modals/modal_edit_rfi.php";
             ?>
         </div>
     </div>

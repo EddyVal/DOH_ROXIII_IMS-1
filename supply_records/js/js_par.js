@@ -121,9 +121,10 @@ function ready_all(){
             type: "POST",
             data: {call_func: "get_item", po_number: $("#reference_no option:selected").text()},
             url: "php/php_ics.php",
+            dataType: 'JSON',
             success: function(data){
-                if(data!=""){
-                    $("#item_name").html("<option disabled selected></option>").append(data);
+                if(data["options"]!=""){
+                    $("#item_name").html("<option disabled selected></option>").append(data["options"]);
                     $("#item_name option").each(function() {
                         if(!po_details[$("#reference_no option:selected").text()].hasOwnProperty(this.value)) {
                             po_details[$("#reference_no option:selected").text()][this.value] = [this.text, 0, false];
@@ -131,8 +132,9 @@ function ready_all(){
                     });
                 }else{
                     swal("Items are not available!", "Items of this PO are not inspected or maybe out of stocks!", "warning");
-                    $("#item_name").html("<option disabled selected></option>").append(data);
+                    $("#item_name").html("<option disabled selected></option>").append(data["options"]);
                 }
+                $('#fund_cluster').val(data["fund_cluster"]);
             }
         });
     });

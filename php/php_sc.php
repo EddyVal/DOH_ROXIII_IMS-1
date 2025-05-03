@@ -357,14 +357,14 @@ function get_item(){
 
 	$category = mysqli_real_escape_string($conn, $_POST["category"]);
 	$searchkw = mysqli_real_escape_string($conn, $_POST["searchkw"]);
-	$sql = mysqli_query($conn, "SELECT DISTINCT description, item_name, category FROM tbl_po /*WHERE category = '$category' AND (status LIKE 'Delivered' OR status LIKE '')*/ ORDER BY item_name ASC");
+	$sql = mysqli_query($conn, "SELECT DISTINCT description, item_name, category, po_number FROM tbl_po /*WHERE category = '$category' AND (status LIKE 'Delivered' OR status LIKE '')*/ ORDER BY item_name ASC");
 	$list_items = "";
 	$num_items = mysqli_num_rows($sql);
 	if($num_items != 0){
 		while($row = mysqli_fetch_assoc($sql)){
 			$list_items.="<ol class=\"dd-list\">
                     <li class=\"dd-item\">
-                        <div data-desc=\"".$row["description"]."\" data-ctgry=\"".$row["category"]."\" class=\"dd-handle\"><b>".$row["item_name"]."</b> ➜ ".$row["description"]."</div>
+                        <div data-desc=\"".$row["description"]."\" data-ctgry=\"".$row["category"]."\" class=\"dd-handle\"><b>".$row["item_name"]."</b> ➜ ".$row["description"]." (".$row["po_number"].")</div>
                     </li>
                 </ol>";
 		}
@@ -426,7 +426,7 @@ function print_stock_card() {
         $office = $row["office"];
         $remarks = $row["remarks"];
 
-        $remarks_display = ($remarks === "1") ? "✔️" : "❌";
+        $remarks_display = ($remarks === "1") ? "✔️ Reported to Accounting" : "❌";
 
         if ($row["status"] == "IN") {
             $qty_balance += (int)$quantity;

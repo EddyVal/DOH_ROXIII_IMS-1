@@ -73,6 +73,7 @@ if(!isset($_SESSION["username"])){
             <?php
                 require "../assets/small_chat.php";
                 require "../modals/modal_add_gatepass.php";
+                require "../modals/modal_edit_gatepass.php";
             ?>
         </div>
     </div>
